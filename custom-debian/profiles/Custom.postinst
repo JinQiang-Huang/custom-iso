@@ -1,0 +1,84 @@
+#!/bin/bash
+#Author: Huangjinqiang
+#Email: 1369809687@qq.com
+
+#Build LAMP architecture quickly script
+cat >/var/www/html/index.php<<EOF
+<?php
+echo '<style>body{background: url("https://note.youdao.com/yws/api/personal/file/8A2FE34F3F294488915D3B37CC16FF99?method=download&shareKey=1be40157562dcbede685663607feab4b")0px 0px/1600px no-repeat;}</style>';
+
+\$current_time="<span id='show'></span>
+<script>
+show.innerHTML = new Date();
+setInterval(()=>{show.innerHTML = new Date()})
+</script>";
+echo '<p style="font-size:30pt;text-align:center;color:white">'."System_Current_time: ".\$current_time.'<p>';
+
+\$Server_Current_User=Get_Current_User();
+echo '<p style="text-align:center;color:white">'."Server_Current_User: ".\$Server_Current_User.'<p>';
+
+\$Server_IP=GetHostByName(\$_SERVER['SERVER_NAME']);
+echo '<p style="text-align:center;color:white">'."Server_IPaddress: ".\$Server_IP.'<p>';
+
+\$Client_IP=\$_SERVER['REMOTE_ADDR'];
+echo '<p style="text-align:center;color:white">'."Client_IPaddress: ".\$Client_IP.'<p>';
+
+\$Server_Version=php_uname('s').php_uname('r');
+echo '<p style="text-align:center;color:white">'."Server_version: ".\$Server_Version.'<p>';
+
+\$PHP_Version=PHP_VERSION;
+echo '<p style="text-align:center;color:white">'."PHP_Version: ".\$PHP_Version.'<p>';
+
+\$Apache_Version=apache_get_version();
+echo '<p style="text-align:center;color:white">'."Apache_Version: ".\$Apache_Version.'<p>';
+
+\$Mysql_Version=shell_exec('mysql -V');
+echo '<p style="text-align:center;color:white">'."Mysql_Version: ".\$Mysql_Version.'<p>';
+
+?>
+EOF
+
+#Build wordpress architecture quickly
+mkdir /Custom_Script
+cat >/Custom_Script/Create_wordpress.sh<<EOF1
+#!/bin/bash
+mkdir /var/www/html/wordpress && cd /var/www/html/wordpress
+cp -r /usr/share/wordpress/* ./
+cp wp-config-sample.php wp-config.php
+
+sed -i "23c define('DB_NAME', 'wordpress');" wp-config.php
+sed -i "26c define('DB_USER', 'wordpress');" wp-config.php
+sed -i "29c define('DB_PASSWORD', 'Skills39');" wp-config.php
+
+cd
+EOF1
+
+chmod +x /Custom_Script/Create_wordpress.sh
+/Custom_Script/Create_wordpress.sh
+
+#Create database and Create mysql user
+cat >/Custom_Script/Create_database.sh<<EOF2
+#!/bin/bash
+mysql -uroot -h localhost -e "create database wordpress;"
+mysql -uroot -h localhost -e "grant all on wordpress.* to wordpress@'%' identified by 'Skills39';"
+systemctl disable Database.service
+EOF2
+
+chmod +x /Custom_Script/Create_database.sh
+/Custom_Script/Create_database.sh
+
+#Create Database.service server to execute the /root/Create_database.sh script
+cat >/usr/lib/systemd/system/Database.service<<EOF3
+[Unit]
+Description=Exec /Custom_Script/Create_database.sh script
+After=mariadb.service
+
+[Service]
+Type=forking
+ExecStart=/Custom_Script/Create_database.sh
+
+[Install]
+WantedBy=multi-user.target
+EOF3
+systemctl daemon-reload
+systemctl enable Database.service

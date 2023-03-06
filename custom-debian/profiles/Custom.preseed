@@ -1,0 +1,53 @@
+#Don't configure Network
+#d-i netcfg/enable boolean false
+
+#Manual config Network
+d-i netcfg/choose_interface select auto
+d-i netcfg/disable_autoconfig boolean true
+
+d-i netcfg/get_ipaddress string 192.168.190.160
+d-i netcfg/get_netmask string 255.255.255.0
+d-i netcfg/get_gateway string 192.168.190.254
+d-i netcfg/get_nameservers string 114.114.114.114 
+d-i netcfg/confirm_static boolean true
+
+#timezone information
+d-i     time/zone       select  US/Pacific
+
+#Hostname and domain information
+d-i netcfg/get_hostname string Custom-Server
+d-i netcfg/get_domain string worldskills.org
+
+#User information
+passwd   passwd/root-password    password Skills39
+passwd   passwd/root-password-again  password Skills39
+#passwd   passwd/make-user    boolean false
+
+passwd   passwd/make-user  boolean true
+passwd   passwd/user-fullname    	 string skill39 user 
+passwd   passwd/username                     string skill39
+passwd   passwd/user-password   	password Skills39 
+passwd   passwd/user-password-again  password Skills39
+
+#Disk information
+d-i partman-auto/init_automatically_partition       select  Guided - use entire disk
+d-i partman-auto/choose_recipe  select All files in one partition (recommended for new users)
+d-i partman/confirm_write_new_label boolean true
+d-i partman/choose_partition  select Finish partitioning and write changes to disk
+d-i partman/confirm boolean true
+d-i partman/confirm_nooverwrite boolean true
+
+#Refuse to submit security information checks
+d-i     popularity-contest/participate  boolean false
+
+# Use a network mirror?
+apt-mirror-setup        apt-setup/use_mirror    boolean false
+
+# set to empty to avoid using security, volatile, etc.
+d-i apt-setup/services-select multiselect 
+
+# Do not scan another CD
+d-i apt-setup/cdrom/set-first  boolean false
+
+# select default boot device
+d-i grub-installer/choose_bootdev select /dev/sda
